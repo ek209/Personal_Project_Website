@@ -23,7 +23,7 @@ def about_me():
 
 @app.route('/projects')
 def projects():
-    return 'WIP'
+    return render_template('projects.html')
 
 @app.route('/redirect/linkedin')
 def linkedin_redirect():

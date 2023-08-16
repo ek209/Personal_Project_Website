@@ -1,2 +1,23 @@
 {% include "header.html" %}
+<div class="container py-4">
+
+    <div class="row align-items-md-stretch">
+        <div class="col-md-6">
+        <div class="h-100 p-5 text-bg-dark rounded-3">
+            <h2>Projects</h2>
+            <p>Explore my current and past python projects. Including demonstrations and code.</p>
+            <a href="{{url_for('projects')}}" class="btn btn-outline-light btn-dark" type="button">Explore!</a>
+        </div>
+        </div>
+        <div class="col-md-6">
+            <div class="h-100 p-5 text-bg-dark rounded-3">
+                <h2>About Myself</h2>
+                <p>Aspring python developer and father. You can learn more about me here.</p>
+                <a href="{{url_for('about_me')}}" class="btn btn-outline-light btn-dark" type="button">Learn more!</a>
+            </div>
+            </div>
+    
+    </div>
+</div>
+
 {% include "footer.html" %}
