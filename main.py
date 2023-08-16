@@ -8,8 +8,16 @@ app.config['SECRET_KEY'] = os.getenv('PERSON_SITE_SECRET_KEY')
 Bootstrap5(app)
 
 @app.route('/')
-def get_all_posts():
+def home():
     return render_template("index.html")
+
+@app.route('/about')
+def about_me():
+    return 'In progress'
+
+@app.route('/projects')
+def projects():
+    return 'WIP'
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
