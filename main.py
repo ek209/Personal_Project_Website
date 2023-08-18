@@ -52,6 +52,11 @@ def linkedin_redirect():
     return redirect(my_linkedin)
 
 @app.route('/redirect/github')
+def github_redirect_ppw():
+    my_github = 'https://github.com/ek209/Personal_Project_Website'
+    return redirect(my_github)
+
+@app.route('/redirect/github')
 def github_redirect():
     my_github = 'https://github.com/ek209'
     return redirect(my_github)
