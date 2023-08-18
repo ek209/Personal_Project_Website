@@ -39,7 +39,12 @@ def morse_converter():
     else:
         form.morse.data = "Enter morse here..."
         form.english.data = "Enter english here..."
-    return render_template('project-page.html', form=form)
+    github_proj_link = 'Text_To_Morse'
+    return render_template('project-page.html', form=form, github_link=github_proj_link)
+
+@app.route('/projects/tic_tac_toe')
+def tic_tac_toe():
+    return render_template("project-page.html")
 
 @app.route('/redirect/linkedin')
 def linkedin_redirect():
@@ -55,6 +60,10 @@ def github_redirect():
 def indeed_redirect():
     my_indeed = ''
     return redirect(my_indeed)
+
+@app.route('/redirect/github/<github>')
+def gh_rep_redirect(github):
+    return redirect(f'http://www.github.com/ek209/{github}')
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
