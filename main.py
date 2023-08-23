@@ -3,8 +3,13 @@ from flask import Flask, render_template, redirect, url_for
 from flask_bootstrap import Bootstrap5
 import datetime
 from flask_ckeditor import CKEditor
-from forms import MorseForm
+from forms import MorseForm, WatermarkForm
 from morse import morse_to_english, english_to_morse
+from watermark import Watermark
+from matplotlib import image
+from PIL import Image
+import io
+import base64
 
 app = Flask(__name__)
 ckeditor = CKEditor(app)
@@ -27,6 +32,26 @@ def about_me():
 @app.route('/projects')
 def projects():
     return render_template('projects.html')
+
+@app.route('/projects/Image-Watermarker', methods=['POST', 'GET'])
+def image_watermarker():
+    base64img = [0, 0]
+    form = WatermarkForm()
+    if form.validate_on_submit():
+        img = image.imread(form.img_to_mark.data)
+        watermarker = Watermark(form.font_size.data,
+                                form.font_name.data,
+                                form.watermark_text.data)
+        if form.add_space.data == 'Yes':
+            watermarker.add_space()
+        new_img_arr = watermarker.make_watermark(img)
+        new_img = Image.fromarray(new_img_arr.astype('uint8'))
+        file_object = io.BytesIO()
+        new_img.save(file_object, 'PNG')
+        file_object.seek(0)
+        base64img = "data:image/png;base64,"+base64.b64encode(file_object.getvalue()).decode('ascii')
+
+    return render_template('image_watermarker.html', form=form, new_img=base64img)
 
 @app.route('/projects/Morse-Converter', methods=['GET', 'POST'])
 def morse_converter():
