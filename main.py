@@ -10,10 +10,11 @@ from matplotlib import image
 from PIL import Image
 import io
 import base64
+from dashboard import create_dashboard
 
 app = Flask(__name__)
+app = create_dashboard(app)
 ckeditor = CKEditor(app)
-
 app.config['SECRET_KEY'] = os.getenv('PERSON_SITE_SECRET_KEY')
 Bootstrap5(app)
 
@@ -28,6 +29,19 @@ def home():
 @app.route('/about')
 def about_me():
     return 'In progress'
+
+@app.route('/redfin_api')
+def redfin_api():
+    return 'WIP'
+
+@app.route('/dashboard') 
+def render_dashboard():
+    return redirect('/rf_dashboard')
+
+@app.route('/projects/redfin_scraper')
+def redfin_scraper():
+    git_hub_proj_link = 'Redfin_Scraper'
+    return render_template("redfin_project.html", github=git_hub_proj_link)
 
 @app.route('/projects')
 def projects():
