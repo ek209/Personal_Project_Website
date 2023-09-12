@@ -1,7 +1,8 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, redirect
 import sqlite3
 import os
 import pandas as pd
+
 
 
 DB_URL = os.environ.get('RF_DB_URI')
@@ -12,7 +13,8 @@ redfin_api_home = Blueprint('redfin_api_home', __name__,
 @redfin_api_home.route('/')
 @redfin_api_home.route('/index')
 def home():
-    return 'WIP'
+    postman = "https://documenter.getpostman.com/view/28972003/2s9YC4TXma#intro"
+    return redirect(postman)
 
 @redfin_api_home.route('/get_recent_sales', methods=['GET'])
 def get_recent_sales():

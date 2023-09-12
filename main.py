@@ -108,4 +108,4 @@ def gh_rep_redirect(github):
     return redirect(f'http://www.github.com/ek209/{github}')
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run()
