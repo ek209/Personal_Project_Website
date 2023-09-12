@@ -10,7 +10,7 @@ import os
 #TODO dcc.loading for when data is updating.
 DB_PATH = os.environ.get('RF_DB_URI')
 
-#Auto populates graph-ids for use in callbacks for each tab
+#Auto populates graph-ids for use in callbacks for each tab, could these be moved into tabs?
 GRAPHS = 12
 CITY_GRAPHS = [f"city-graph-{num}" for num in range(0,GRAPHS)]
 STATE_GRAPHS = [f"state-graph-{num}" for num in range(0,GRAPHS)]
@@ -18,7 +18,8 @@ ZIP_GRAPHS = [f"zip-graph-{num}" for num in range(0,GRAPHS)]
 LOCATION_GRAPHS = [f"location-graph-{num}" for num in range(0, GRAPHS)]
 
 def create_dashboard(server):
-    """Creates a dash dashboard application and adds it to a flask server.
+    """Creates a dash dashboard application and adds it to a flask server. If no flask server is passed,
+    returns Dash instance's server.
 
     Args:
         server (Flask server): Flask server to add the dashboard application to.
@@ -28,7 +29,10 @@ def create_dashboard(server):
         layout has been set and callbacks initialized.
     """
 
-    app = Dash(__name__, suppress_callback_exceptions=True, server=server, url_base_pathname="/rf_dashboard/")
+    if server:
+        app = Dash(__name__, suppress_callback_exceptions=True, server=server, url_base_pathname="/rf_dashboard/")
+    else:
+        app = Dash(__name__, suppress_callback_exceptions=True)
 
     app.layout = html.Div([
         (html.H1(f'Data from: {datetime.date.today()}')),
@@ -399,5 +403,6 @@ def init_callbacks(app):
                         labels={seconday_column : "Average Year Built",
                                 "property_type" : "Property Type"})
         
-#if __name__ == '__main__':
-#    app.run(debug=True)
+if __name__ == '__main__':
+    app = create_dashboard()
+    app.run(debug=True)
