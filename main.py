@@ -81,7 +81,7 @@ def morse_converter():
 
 @app.route('/projects/tic_tac_toe')
 def tic_tac_toe():
-    return render_template("project-page.html")
+    return render_template("WIP")
 
 @app.route('/redirect/linkedin')
 def linkedin_redirect():
