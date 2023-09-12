@@ -16,8 +16,9 @@ CITY_GRAPHS = [f"city-graph-{num}" for num in range(0,GRAPHS)]
 STATE_GRAPHS = [f"state-graph-{num}" for num in range(0,GRAPHS)]
 ZIP_GRAPHS = [f"zip-graph-{num}" for num in range(0,GRAPHS)]
 LOCATION_GRAPHS = [f"location-graph-{num}" for num in range(0, GRAPHS)]
+
 def create_dashboard(server):
-    app = Dash(__name__, suppress_callback_exceptions=True, url_base_pathname="/rf_dashboard/")
+    app = Dash(__name__, suppress_callback_exceptions=True, server=server, url_base_pathname="/rf_dashboard/")
 
     app.layout = html.Div([
         (html.H1(f'Data from: {datetime.date.today()}')),

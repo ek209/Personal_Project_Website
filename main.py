@@ -11,8 +11,10 @@ from PIL import Image
 import io
 import base64
 from dashboard import create_dashboard
+from redfin_api import redfin_api_home
 
 app = Flask(__name__)
+app.register_blueprint(redfin_api_home, url_prefix='/redfin_api')
 app = create_dashboard(app)
 ckeditor = CKEditor(app)
 app.config['SECRET_KEY'] = os.getenv('PERSON_SITE_SECRET_KEY')
@@ -29,10 +31,6 @@ def home():
 @app.route('/about')
 def about_me():
     return 'In progress'
-
-@app.route('/redfin_api')
-def redfin_api():
-    return 'WIP'
 
 @app.route('/dashboard') 
 def render_dashboard():
