@@ -7,6 +7,7 @@ from forms import MorseForm, WatermarkForm
 from morse import morse_to_english, english_to_morse
 from watermark import Watermark
 from matplotlib import image
+matplotlib.use('Agg')
 import matplotlib
 matplotlib.use('Agg')
 from PIL import Image
