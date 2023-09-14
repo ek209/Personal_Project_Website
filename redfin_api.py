@@ -1,7 +1,5 @@
 from flask import Blueprint, request, redirect
-import os
 import pandas as pd
-import psycopg2
 from dashboard import postgres_connect
 
 con = postgres_connect()
