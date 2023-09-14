@@ -420,4 +420,4 @@ def init_callbacks(app):
         
 if __name__ == '__main__':
     app = create_dashboard()
-    app.run(debug=True)
+    app.run()
