@@ -1,14 +1,29 @@
 from dash import Dash, html, dcc, Input, Output, callback
 import pandas as pd
-import plotly.express as px 
-import sqlite3
+import plotly.express as px
+import psycopg2
 import datetime
 import os
 
 #TODO Make string map for graphs to make text cleaner
 #TODO Create tabs to sort location data by categories (TAB INSIDE TAB)
 #TODO dcc.loading for when data is updating.
-DB_PATH = os.environ.get('RF_DB_URI')
+
+
+def postgres_connect():
+    """Creates postgresql connection to RF_PG_DB
+
+    Returns:
+        con : Connection to postgres db
+    """
+    con = psycopg2.connect(host=os.environ.get('PG_RF_HOST'),
+                            port=os.environ.get('PG_RF_PORT'),
+                            user=os.environ.get('PG_RF_USER'),
+                            password=os.environ.get('PG_RF_PASS'),
+                            dbname=os.environ.get('PG_RF_DB'),
+                            sslmode='require')
+    con.autocommit = True
+    return con
 
 #Auto populates graph-ids for use in callbacks for each tab, could these be moved into tabs?
 GRAPHS = 12
@@ -124,8 +139,8 @@ def init_callbacks(app):
         Returns:
             Tuple(figures): Returns a tuple of plotly graphs to send to Output callbacks
         """
-        con = sqlite3.connect(DB_PATH)
-        zip_df = pd.read_sql(('SELECT *  FROM sold_properties WHERE postal_code LIKE (?)'), con, params=(postal_code,))
+        con = postgres_connect()
+        zip_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE postal_code LIKE (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(str(postal_code) + '%',))
         con.close()
         graphs = compile_graphs(zip_df, postal_code)
 
@@ -155,8 +170,8 @@ def init_callbacks(app):
         Returns:
             Tuple(figures): Returns a tuple of plotly graphs to send to Output callbacks        """
         
-        con = sqlite3.connect(DB_PATH)
-        state_df = pd.read_sql(('SELECT *  FROM sold_properties WHERE state_prov = (?)'), con, params=(state_name,))
+        con = postgres_connect()
+        state_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE state_prov = (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(state_name,))
         con.close()
         graphs = compile_graphs(state_df, state_name)
         return tuple(graphs)
@@ -179,8 +194,8 @@ def init_callbacks(app):
             Tuple(figures): Returns a tuple of plotly graphs to send to Output callbacks
         """
 
-        con = sqlite3.connect(DB_PATH)
-        city_df = pd.read_sql(('SELECT *  FROM sold_properties WHERE state_prov = (?) AND city = (?)'), con, params=(state_name, city_name))
+        con = postgres_connect()
+        city_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE state_prov = (%s) AND city = (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(state_name, city_name))
         con.close()
         graphs = compile_graphs(city_df, city_name)
         return tuple(graphs)
@@ -202,8 +217,8 @@ def init_callbacks(app):
             Tuple(figures): Returns a tuple of plotly graphs to send to Output callbacks
         """
 
-        con = sqlite3.connect(DB_PATH)
-        market_df = pd.read_sql(('SELECT *  FROM sold_properties WHERE location = (?)'), con, params=(market_name,))
+        con = postgres_connect()
+        market_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE location = (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(market_name,))
         con.close()
         graphs = compile_graphs(market_df, market_name)
         return tuple(graphs)

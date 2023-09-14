@@ -1,12 +1,10 @@
 from flask import Blueprint, request, redirect
-import sqlite3
 import os
 import pandas as pd
+import psycopg2
+from dashboard import postgres_connect
 
-
-
-DB_URL = os.environ.get('RF_DB_URI')
-
+con = postgres_connect()
 redfin_api_home = Blueprint('redfin_api_home', __name__,
                         template_folder='templates')
 
@@ -22,7 +20,7 @@ def get_recent_sales():
     allowed_args = ['count', 'property_type', 'postal_code', 'state_prov', 'city', 'location']
     req_data = request.args
     params=[]
-    sql = "SELECT * FROM sold_properties WHERE sold_date NOT NULL"
+    sql = "SELECT * FROM sold_properties WHERE sold_date IS NOT NULL"
 
     if 'count' not in req_data.keys():
         count=10
@@ -36,13 +34,11 @@ def get_recent_sales():
                 params.append((value))
             except ValueError:
                 params.append(value)
-            sql = sql + f' AND {arg} = (?)'
+            sql = sql + f' AND {arg} = (%s)'
 
-    sql = sql + " ORDER BY sold_year DESC, sold_month DESC, sold_day DESC LIMIT (?)"
+    sql = sql + " ORDER BY sold_year DESC, sold_month DESC, sold_day DESC LIMIT (%s)"
     params.append(int(count))
-    con = sqlite3.connect(DB_URL)
     df = pd.read_sql(sql, con, params=params,)
-    con.close()
     if df.empty:
         return 'No data for these search parameters'
     df = df[['sold_date', 'property_type', 'address', 'city', 'state_prov', 'postal_code', 'location',
@@ -56,7 +52,7 @@ def get_random_sales():
     allowed_args = ['count', 'property_type', 'postal_code', 'state_prov', 'city', 'location']
     req_data = request.args
     params=[]
-    sql = "SELECT * FROM sold_properties WHERE lat NOT NULL"
+    sql = "SELECT * FROM sold_properties WHERE lat IS NOT NULL"
 
     if 'count' not in req_data.keys():
         count=10
@@ -70,13 +66,11 @@ def get_random_sales():
                 params.append((value))
             except ValueError:
                 params.append(value)
-            sql = sql + f' AND {arg} = (?)'
+            sql = sql + f' AND {arg} = (%s)'
 
-    sql = sql + " ORDER BY RANDOM() LIMIT (?)"
+    sql = sql + " ORDER BY RANDOM() LIMIT (%s)"
     params.append(int(count))
-    con = sqlite3.connect(DB_URL)
     df = pd.read_sql(sql, con, params=params,)
-    con.close()
     if df.empty:
         return 'No data for these search parameters'
     df = df[['sold_date', 'property_type', 'address', 'city', 'state_prov', 'postal_code', 'location',
@@ -104,13 +98,11 @@ def get_most_expensive():
                 params.append((value))
             except ValueError:
                 params.append(value)
-            sql = sql + f' AND {arg} = (?)'
+            sql = sql + f' AND {arg} = (%s)'
 
-    sql = sql + " ORDER BY price DESC LIMIT (?)"
+    sql = sql + " ORDER BY price DESC LIMIT (%s)"
     params.append(int(count))
-    con = sqlite3.connect(DB_URL)
     df = pd.read_sql(sql, con, params=params,)
-    con.close()
     if df.empty:
         return 'No data for these search parameters'
     df = df[['sold_date', 'property_type', 'address', 'city', 'state_prov', 'postal_code', 'location',
@@ -139,13 +131,11 @@ def get_least_expensive():
                 params.append((value))
             except ValueError:
                 params.append(value)
-            sql = sql + f' AND {arg} = (?)'
+            sql = sql + f' AND {arg} = (%s)'
 
-    sql = sql + " ORDER BY price LIMIT (?)"
+    sql = sql + " ORDER BY price LIMIT (%s)"
     params.append(int(count))
-    con = sqlite3.connect(DB_URL)
     df = pd.read_sql(sql, con, params=params,)
-    con.close()
     if df.empty:
         return 'No data for these search parameters'
     df = df[['sold_date', 'property_type', 'address', 'city', 'state_prov', 'postal_code', 'location',
@@ -173,13 +163,11 @@ def get_most_baths():
                 params.append((value))
             except ValueError:
                 params.append(value)
-            sql = sql + f' AND {arg} = (?)'
+            sql = sql + f' AND {arg} = (%s)'
 
-    sql = sql + " ORDER BY baths DESC LIMIT (?)"
+    sql = sql + " ORDER BY baths DESC LIMIT (%s)"
     params.append(int(count))
-    con = sqlite3.connect(DB_URL)
     df = pd.read_sql(sql, con, params=params,)
-    con.close()
     if df.empty:
         return 'No data for these search parameters'
     df = df[['sold_date', 'property_type', 'address', 'city', 'state_prov', 'postal_code', 'location',
@@ -207,13 +195,11 @@ def get_most_beds():
                 params.append((value))
             except ValueError:
                 params.append(value)
-            sql = sql + f' AND {arg} = (?)'
+            sql = sql + f' AND {arg} = (%s)'
 
-    sql = sql + " ORDER BY beds DESC LIMIT (?)"
+    sql = sql + " ORDER BY beds DESC LIMIT (%s)"
     params.append(int(count))
-    con = sqlite3.connect(DB_URL)
     df = pd.read_sql(sql, con, params=params,)
-    con.close()
     if df.empty:
         return 'No data for these search parameters'
     df = df[['sold_date', 'property_type', 'address', 'city', 'state_prov', 'postal_code', 'location',
@@ -241,13 +227,11 @@ def get_most_sqft():
                 params.append((value))
             except ValueError:
                 params.append(value)
-            sql = sql + f' AND {arg} = (?)'
+            sql = sql + f' AND {arg} = (%s)'
 
-    sql = sql + " ORDER BY sqft DESC LIMIT (?)"
+    sql = sql + " ORDER BY sqft DESC LIMIT (%s)"
     params.append(int(count))
-    con = sqlite3.connect(DB_URL)
     df = pd.read_sql(sql, con, params=params,)
-    con.close()
     if df.empty:
         return 'No data for these search parameters'
     df = df[['sold_date', 'property_type', 'address', 'city', 'state_prov', 'postal_code', 'location',
@@ -260,7 +244,7 @@ def get_high_ppsqft():
     allowed_args = ['count', 'property_type', 'postal_code', 'state_prov', 'city', 'location']
     req_data = request.args
     params=[]
-    sql = "SELECT * FROM sold_properties WHERE price_per_sqft NOT NULL AND sqft > 100"
+    sql = "SELECT * FROM sold_properties WHERE price_per_sqft IS NOT NULL AND sqft > 100"
 
     if 'count' not in req_data.keys():
         count=10
@@ -274,13 +258,11 @@ def get_high_ppsqft():
                 params.append((value))
             except ValueError:
                 params.append(value)
-            sql = sql + f' AND {arg} = (?)'
+            sql = sql + f' AND {arg} = (%s)'
 
-    sql = sql + " ORDER BY price_per_sqft DESC LIMIT (?)"
+    sql = sql + " ORDER BY price_per_sqft DESC LIMIT (%s)"
     params.append(int(count))
-    con = sqlite3.connect(DB_URL)
     df = pd.read_sql(sql, con, params=params,)
-    con.close()
     if df.empty:
         return 'No data for these search parameters'
     df = df[['sold_date', 'property_type', 'address', 'city', 'state_prov', 'postal_code', 'location',
