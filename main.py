@@ -7,11 +7,15 @@ from forms import MorseForm, WatermarkForm
 from morse import morse_to_english, english_to_morse
 from watermark import Watermark
 from matplotlib import image
+import matplotlib
+matplotlib.use('Agg')
 from PIL import Image
 import io
 import base64
 from dashboard import create_dashboard
 from redfin_api import redfin_api_home
+#TODO Use sql alchemy instead of psycopg2 for db connections, works but not officially supported
+
 
 app = Flask(__name__)
 app.register_blueprint(redfin_api_home, url_prefix='/redfin_api')
