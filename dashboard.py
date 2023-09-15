@@ -7,7 +7,6 @@ import os
 
 #TODO Make string map for graphs to make text cleaner
 #TODO Create tabs to sort location data by categories (TAB INSIDE TAB)
-#TODO dcc.loading for when data is updating.
 
 
 def postgres_connect():

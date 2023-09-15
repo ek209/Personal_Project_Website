@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, jsonify, request
 from flask_bootstrap import Bootstrap5
 import datetime
 from flask_ckeditor import CKEditor
@@ -72,11 +72,14 @@ def image_watermarker():
 @app.route('/projects/Morse-Converter', methods=['GET', 'POST'])
 def morse_converter():
     form = MorseForm()
-    if form.validate_on_submit():
-        if form.convert_morse.data:
-            form.morse.data = english_to_morse(form.english.data)
-        elif form.convert_english.data:
-            form.english.data = morse_to_english(form.morse.data)
+    if request.method == "POST":
+        print(request.json)
+        if request.json['english'] != None:
+            return {"translation" : english_to_morse(request.json['english'])}
+        elif request.json['morse'] != None:
+            return {"translation" : morse_to_english(request.json['morse'])}
+        else:
+            return {} 
     else:
         form.morse.data = "Enter morse here..."
         form.english.data = "Enter english here..."
