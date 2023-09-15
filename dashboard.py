@@ -32,7 +32,7 @@ STATE_GRAPHS = [f"state-graph-{num}" for num in range(0,GRAPHS)]
 ZIP_GRAPHS = [f"zip-graph-{num}" for num in range(0,GRAPHS)]
 LOCATION_GRAPHS = [f"location-graph-{num}" for num in range(0, GRAPHS)]
 
-def create_dashboard(server):
+def create_dashboard(server=False):
     """Creates a dash dashboard application and adds it to a flask server. If no flask server is passed,
     returns Dash instance's server.
 
@@ -51,7 +51,7 @@ def create_dashboard(server):
 
     app.layout = html.Div([
         (html.H1(f'Data from: {datetime.date.today()}')),
-        dcc.Tabs(id='tabs-example-1', value='tab-3', children=[
+        dcc.Tabs(id='tabs-example-1', value='tab-1', children=[
             dcc.Tab(label='City', value='tab-1'),
             dcc.Tab(label='State', value='tab-2'),
             dcc.Tab(label='Postal code', value='tab-3'),
@@ -88,36 +88,52 @@ def init_callbacks(app):
                 html.H2('City Data'),
                 dcc.Input(id="city-name", type='text', placeholder="City Name", value="Glassell Park", debounce=True),
                 dcc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True),
-                html.Div([dcc.Graph(id) for id in CITY_GRAPHS]),
+                dcc.Loading(
+                    html.Div([dcc.Graph(id) for id in CITY_GRAPHS]),
+                    id="loading-1",
+                    fullscreen = True,
+                    type="default")
                 ])
         
         elif tab == 'tab-2':
             return html.Div([
                 html.H2('State Data'),
                 dcc.Input(id="state-name", type='text', placeholder="State Abbreviation", value="WA", debounce=True),
-                html.Div([dcc.Graph(id) for id in STATE_GRAPHS]),
+                dcc.Loading(
+                    html.Div([dcc.Graph(id) for id in STATE_GRAPHS]),
+                    id="loading-2",
+                    fullscreen = True,
+                    type="default")
                 ])
         
         elif tab == 'tab-3':
-            return html.Div(
-            [html.H2('Postal Code Data'),
-            dcc.Input(id="postal-code", type='number', placeholder="Postal code", value=2128, debounce=True),
-            html.Div([dcc.Graph(id) for id in ZIP_GRAPHS]),
-            dcc.Dropdown(id='prop-year',
-                        options=[2023, 2022, 2021, 2020, 2019, 2018],
-                        value=2023),
+            return html.Div([
+                html.H2('Postal Code Data'),
+                dcc.Input(id="postal-code", type='number', placeholder="Postal code", value=2128, debounce=True),
+                dcc.Loading(children=[html.Div([dcc.Graph(id) for id in ZIP_GRAPHS]),
+                                      html.Div([dcc.Dropdown(id='prop-year',
+                                                            options=[2023, 2022, 2021, 2020, 2019, 2018],
+                                                            value=2023),
 
-            #These graphs still need to be added into other locations and their own method to generate
-            dcc.Graph(id='zip-sales-by-year'),
-            dcc.Graph(id='zip-prop-type-sold-per-year'),
-            dcc.Graph(id='zip-prop-price-by-year')        
+                                                #These graphs still need to be added into other locations and their own method to generate
+                                                dcc.Graph(id='zip-sales-by-year'),
+                                                dcc.Graph(id='zip-prop-type-sold-per-year'),
+                                                dcc.Graph(id='zip-prop-price-by-year')]
+                                                )],
+                            
+                            id="loading-3",
+                            fullscreen = True,
+                            type="default")
             ])
         
         elif tab == "tab-4":
             return html.Div([
             html.H2('Location-Data'),
             dcc.Input(id="location-name", type='text', placeholder="Market", value="North Tacoma", debounce=True),
-            html.Div([dcc.Graph(id) for id in LOCATION_GRAPHS]),
+            dcc.Loading(html.Div([dcc.Graph(id) for id in LOCATION_GRAPHS]),
+                        id="loading-3",
+                        fullscreen = True,
+                        type="default")
             ])
 
     @callback([Output(id, 'figure') for id in ZIP_GRAPHS],
