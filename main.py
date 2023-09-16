@@ -73,7 +73,6 @@ def image_watermarker():
 def morse_converter():
     form = MorseForm()
     if request.method == "POST":
-        print(request.json)
         if request.json['english'] != None:
             return {"translation" : english_to_morse(request.json['english'])}
         elif request.json['morse'] != None:
