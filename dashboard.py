@@ -1,4 +1,5 @@
 from dash import Dash, html, dcc, Input, Output, callback
+import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 import psycopg2
@@ -52,20 +53,22 @@ def create_dashboard(server=False):
         Flask server: Returns flask server after dashboard app has been created and
         layout has been set and callbacks initialized.
     """
+    css_path = [dbc.themes.BOOTSTRAP]
+    scripts_path = [os.getcwd() + "/static/assets/js/scripts.js"]
     assets_path = os.getcwd() + "/static/assets"
     if server:
-        app = Dash(__name__, suppress_callback_exceptions=True, server=server, url_base_pathname="/rf_dashboard/", assets_folder=assets_path)
+        app = Dash(__name__, suppress_callback_exceptions=True, server=server, url_base_pathname="/rf_dashboard/", assets_folder=assets_path, external_scripts=scripts_path, external_stylesheets=css_path)
     else:
-        app = Dash(__name__, suppress_callback_exceptions=True, assets_folder=assets_path)
+        app = Dash(__name__, suppress_callback_exceptions=True, assets_folder=assets_path, external_scripts=scripts_path, external_stylesheets=css_path)
     
     app.title = "Redfin Data Dashboard"
     app.layout = html.Div([
-        (html.H1(f'Data from: {datetime.date.today()}')),
-        dcc.Tabs(id='tabs-example-1', value='tab-1', children=[
-            dcc.Tab(label='City', value='tab-1'),
-            dcc.Tab(label='State', value='tab-2'),
-            dcc.Tab(label='Postal code', value='tab-3'),
-            dcc.Tab(label='Market', value='tab-4')
+        (html.H1(dbc.Row(f'Data from: {datetime.date.today()}', justify='center', class_name='text-dark bg-light'))),
+        dbc.Tabs(id='tabs-example-1', active_tab='tab-1', children=[
+            dbc.Tab(label='City', tab_id='tab-1', label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark'),
+            dbc.Tab(label='State', tab_id='tab-2', label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark'),
+            dbc.Tab(label='Postal code', tab_id='tab-3', label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark'),
+            dbc.Tab(label='Market', tab_id='tab-4',  label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark')
         ]),
         html.Div(id='tabs-example-content-1')
     ])
@@ -82,7 +85,7 @@ def init_callbacks(app):
 
     @callback(
         Output('tabs-example-content-1', 'children'),
-        Input('tabs-example-1', 'value')
+        Input('tabs-example-1', 'active_tab')
     )
     def render_content(tab):
         """Renders dash tabs based on which tab id is active.
@@ -98,29 +101,29 @@ def init_callbacks(app):
                 html.H2('City Data'),
                 dcc.Input(id="city-name", type='text', placeholder="City Name", value="Glassell Park", debounce=True),
                 dcc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True),
-                dcc.Loading(
+                dbc.Spinner(
                     html.Div([dcc.Graph(id) for id in CITY_GRAPHS]),
                     id="loading-1",
                     fullscreen = True,
-                    type="default")
+                    type="grow")
                 ])
         
         elif tab == 'tab-2':
             return html.Div([
                 html.H2('State Data'),
                 dcc.Input(id="state-name", type='text', placeholder="State Abbreviation", value="WA", debounce=True),
-                dcc.Loading(
+                dbc.Spinner(
                     html.Div([dcc.Graph(id) for id in STATE_GRAPHS]),
                     id="loading-2",
                     fullscreen = True,
-                    type="default")
+                    type="grow")
                 ])
         
         elif tab == 'tab-3':
             return html.Div([
                 html.H2('Postal Code Data'),
                 dcc.Input(id="postal-code", type='number', placeholder="Postal code", value=2128, debounce=True),
-                dcc.Loading(children=[html.Div([dcc.Graph(id) for id in ZIP_GRAPHS]),
+                dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in ZIP_GRAPHS]),
                                       html.Div([dcc.Dropdown(id='prop-year',
                                                             options=[2023, 2022, 2021, 2020, 2019, 2018],
                                                             value=2023),
@@ -133,17 +136,17 @@ def init_callbacks(app):
                             
                             id="loading-3",
                             fullscreen = True,
-                            type="default")
+                            type="grow")
             ])
         
         elif tab == "tab-4":
             return html.Div([
             html.H2('Location-Data'),
             dcc.Input(id="location-name", type='text', placeholder="Market", value="North Tacoma", debounce=True),
-            dcc.Loading(html.Div([dcc.Graph(id) for id in LOCATION_GRAPHS]),
-                        id="loading-3",
+            dbc.Spinner(html.Div([dcc.Graph(id) for id in LOCATION_GRAPHS]),
+                        id="loading-4",
                         fullscreen = True,
-                        type="default")
+                        type="grow")
             ])
 
     @callback([Output(id, 'figure') for id in ZIP_GRAPHS],
