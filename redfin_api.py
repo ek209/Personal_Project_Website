@@ -2,6 +2,7 @@ from flask import Blueprint, request, redirect
 import pandas as pd
 from dashboard import postgres_connect
 
+#creates postrgres connect and home for api
 con = postgres_connect()
 redfin_api_home = Blueprint('redfin_api_home', __name__,
                         template_folder='templates')
@@ -9,6 +10,11 @@ redfin_api_home = Blueprint('redfin_api_home', __name__,
 @redfin_api_home.route('/')
 @redfin_api_home.route('/index')
 def home():
+    """Redirects to Postman for Redfin API docs
+
+    Returns:
+        Redirect: Redirect to postman documentation
+    """
     postman = "https://documenter.getpostman.com/view/28972003/2s9YC4TXma#intro"
     return redirect(postman)
 

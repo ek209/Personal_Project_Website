@@ -5,9 +5,9 @@ import psycopg2
 import datetime
 import os
 
-#TODO Make string map for graphs to make text cleaner
+#TODO Move year_built bar graph into main method and use if statement to change y range
 #TODO Create tabs to sort location data by categories (TAB INSIDE TAB)
-
+#TODO Add relationship for database for chloropleth maps.
 
 def postgres_connect():
     """Creates postgresql connection to RF_PG_DB
@@ -23,6 +23,16 @@ def postgres_connect():
                             sslmode='require')
     con.autocommit = True
     return con
+
+#This dictionary is used to clean up graph titles and labels for columns so labels can be variables
+GRAPH_FORMAT_MAP = {'sqft' : 'Square Feet',
+                    'lot_size' : 'Lot Size',
+                    'price_per_sqft' : 'Price Per Square Foot',
+                    'price' : 'Price',
+                    'year_built' : 'Year Built',
+                    'beds' : 'Bedrooms',
+                    'baths' : 'Bathrooms',
+                    'property_type' : 'Property Type'}
 
 #Auto populates graph-ids for use in callbacks for each tab, could these be moved into tabs?
 GRAPHS = 12
@@ -343,8 +353,8 @@ def init_callbacks(app):
                         x=df.get('sold_year'),
                         y=df.get(secondary_column),
                         color="property_type",
-                        title=f"Average {secondary_column} by property type per year for {location}",
-                        labels={secondary_column : f"{secondary_column}",
+                        title=(f"Average {GRAPH_FORMAT_MAP[secondary_column]} by Property Type Per Year for {location}"),
+                        labels={secondary_column : (f"{GRAPH_FORMAT_MAP[secondary_column]}"),
                                 "sold_year" : "Year",
                                 "property_type" : "Property Type"})
 
@@ -373,8 +383,8 @@ def init_callbacks(app):
                         y=df.get('price'),
                         color="property_type",
                         trendline='ols',
-                        title=f"Price vs {secondary_column} by property type for {location}",
-                        labels={secondary_column : f"{secondary_column}",
+                        title=f"Price vs {GRAPH_FORMAT_MAP[secondary_column]} by Property Type for {location}",
+                        labels={secondary_column : f"{GRAPH_FORMAT_MAP[secondary_column]}",
                                 "Price" : "Price"})
 
     def bar_property_price_v_avg_var(dataframe, location, secondary_column):
@@ -399,14 +409,14 @@ def init_callbacks(app):
                         x=avg_price.get('property_type'),
                         y=avg_price.get(secondary_column),
                         color="property_type",
-                        title=f"Average {secondary_column} by property type {location}",
-                        labels={secondary_column : f"Average {secondary_column}",
+                        title=f"Average {GRAPH_FORMAT_MAP[secondary_column]} by property type {location}",
+                        labels={secondary_column : f"Average {GRAPH_FORMAT_MAP[secondary_column]}",
                                 "property_type" : "Property Type"})
 
     def bar_average_year_built_by_prop_type(dataframe, location):
         #TODO Create if statement from other bar chart method to set range
         #if secondary_column is year_built instead of seperate method
-        seconday_column = 'year_built'
+        secondary_column = 'year_built'
         """Takes dataframe and creates bar chart based on property_type distribution and 
         average of secondary_column. Changes y axis range to better show years. Removes Unknown, Other, and Timeshare property types from dataframe
         before creating figure. If empty dataframe returns None.
@@ -420,17 +430,17 @@ def init_callbacks(app):
         """
         dataframe[~dataframe['property_type'].isin(['Unknown', 'Other', 'Timeshare'])]
 
-        avg = dataframe[['property_type', seconday_column]].groupby('property_type', as_index=False).mean(True).dropna()
+        avg = dataframe[['property_type', secondary_column]].groupby('property_type', as_index=False).mean(True).dropna()
         if avg.shape[0] == 0:
             return None
         else:    
             return px.bar(avg,
                         x=avg.get('property_type'),
-                        y=avg.get(seconday_column),
+                        y=avg.get(secondary_column),
                         color="property_type",
                         title=f"Average year built by property type for {location}",
                         range_y=[1900, datetime.date.today().year],
-                        labels={seconday_column : "Average Year Built",
+                        labels={secondary_column : GRAPH_FORMAT_MAP[secondary_column],
                                 "property_type" : "Property Type"})
         
 if __name__ == '__main__':
