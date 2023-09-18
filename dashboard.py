@@ -52,12 +52,13 @@ def create_dashboard(server=False):
         Flask server: Returns flask server after dashboard app has been created and
         layout has been set and callbacks initialized.
     """
-
+    assets_path = os.getcwd() + "/static/assets"
     if server:
-        app = Dash(__name__, suppress_callback_exceptions=True, server=server, url_base_pathname="/rf_dashboard/")
+        app = Dash(__name__, suppress_callback_exceptions=True, server=server, url_base_pathname="/rf_dashboard/", assets_folder=assets_path)
     else:
-        app = Dash(__name__, suppress_callback_exceptions=True)
-
+        app = Dash(__name__, suppress_callback_exceptions=True, assets_folder=assets_path)
+    
+    app.title = "Redfin Data Dashboard"
     app.layout = html.Div([
         (html.H1(f'Data from: {datetime.date.today()}')),
         dcc.Tabs(id='tabs-example-1', value='tab-1', children=[
