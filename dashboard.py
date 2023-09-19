@@ -6,6 +6,7 @@ import psycopg2
 import datetime
 import os
 
+#TODO Clean up methods for dbc creation
 #TODO Move year_built bar graph into main method and use if statement to change y range
 #TODO Create tabs to sort location data by categories (TAB INSIDE TAB)
 #TODO Add relationship for database for chloropleth maps.
