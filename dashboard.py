@@ -105,12 +105,12 @@ def init_callbacks(app):
                              dbc.Col(dbc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True), width=2),],
                              class_name='justify-content-md-center g-3',
                              align='center'),
-                             dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in CITY_GRAPHS])],
+                             
+                             dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in CITY_GRAPHS])],
                                          id="loading-1",
                                          type="grow",
                                          spinner_class_name='position-absolute top-0')
-                                         ])
-        
+                                         ]),
         elif tab == 'tab-2':
             return html.Div([
                 dbc.Row([html.H2('State Analysis')],
@@ -223,6 +223,7 @@ def init_callbacks(app):
         return tuple(graphs)
 
     @callback([Output(id, 'figure') for id in CITY_GRAPHS],
+              [Output(f'{id}-text', 'title') for id in CITY_GRAPHS],
         Input('city-name', 'value'),
         Input('state-abbreviation-city', 'value')
     )
@@ -244,7 +245,8 @@ def init_callbacks(app):
         city_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE state_prov = (%s) AND city = (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(state_name, city_name))
         con.close()
         graphs = compile_graphs(city_df, city_name)
-        return tuple(graphs)
+        titles = [graph.layout.title.text for graph in graphs]
+        return tuple(graphs + titles)
 
 
     @callback(
@@ -345,9 +347,13 @@ def init_callbacks(app):
         if dataframe.shape[0] == 0:
             return None
         else:
-            return px.pie(dataframe.dropna(), 
-                        names=dataframe['property_type'], 
-                        title=f"Property type breakdown for {location}")
+            graph = px.pie(dataframe.dropna(), 
+                        names=dataframe['property_type'],
+                        title=f"Property Type Breakdown for {location}")
+            graph.update_layout(title={
+                               'xanchor' : 'center',
+                               'x' : .5})
+            return graph
 
 
     def line_avg_var_by_prop_type_by_year(dataframe, location, secondary_column):
@@ -370,7 +376,7 @@ def init_callbacks(app):
             return None
         else: 
             df = df.groupby(['sold_year', 'property_type'], as_index=False).mean(True)  
-            return px.line(df,
+            graph = px.line(df,
                         x=df.get('sold_year'),
                         y=df.get(secondary_column),
                         color="property_type",
@@ -378,7 +384,10 @@ def init_callbacks(app):
                         labels={secondary_column : (f"{GRAPH_FORMAT_MAP[secondary_column]}"),
                                 "sold_year" : "Year",
                                 "property_type" : "Property Type"})
-
+            graph.update_layout(title={
+                               'xanchor' : 'center',
+                               'x' : .5})
+            return graph
 
     def scatter_price_v_var_by_prop_type(dataframe, location, secondary_column):
         """Creates a plotly scatter figure to show price and secondary_column correlation
@@ -399,7 +408,7 @@ def init_callbacks(app):
         if df.shape[0] == 0:
             return None
         else:    
-            return px.scatter(df,
+            graph = px.scatter(df,
                         x=df.get(secondary_column),
                         y=df.get('price'),
                         color="property_type",
@@ -407,6 +416,11 @@ def init_callbacks(app):
                         title=f"Price vs {GRAPH_FORMAT_MAP[secondary_column]} by Property Type for {location}",
                         labels={secondary_column : f"{GRAPH_FORMAT_MAP[secondary_column]}",
                                 "Price" : "Price"})
+            
+            graph.update_layout(title={
+                    'xanchor' : 'center',
+                    'x' : .5})
+            return graph
 
     def bar_property_price_v_avg_var(dataframe, location, secondary_column):
         """Takes dataframe and creates bar chart based on property_type distribution and 
@@ -426,13 +440,18 @@ def init_callbacks(app):
             return None
         else:
             avg_price = avg_price.groupby('property_type', as_index=False).mean(True)
-            return px.bar(avg_price,
+            graph = px.bar(avg_price,
                         x=avg_price.get('property_type'),
                         y=avg_price.get(secondary_column),
                         color="property_type",
                         title=f"Average {GRAPH_FORMAT_MAP[secondary_column]} by property type {location}",
                         labels={secondary_column : f"Average {GRAPH_FORMAT_MAP[secondary_column]}",
                                 "property_type" : "Property Type"})
+            
+            graph.update_layout(title={
+                    'xanchor' : 'center',
+                    'x' : .5})
+            return graph
 
     def bar_average_year_built_by_prop_type(dataframe, location):
         #TODO Create if statement from other bar chart method to set range
@@ -455,7 +474,7 @@ def init_callbacks(app):
         if avg.shape[0] == 0:
             return None
         else:    
-            return px.bar(avg,
+            graph = px.bar(avg,
                         x=avg.get('property_type'),
                         y=avg.get(secondary_column),
                         color="property_type",
@@ -463,6 +482,11 @@ def init_callbacks(app):
                         range_y=[1900, datetime.date.today().year],
                         labels={secondary_column : GRAPH_FORMAT_MAP[secondary_column],
                                 "property_type" : "Property Type"})
+
+            graph.update_layout(title={
+                               'xanchor' : 'center',
+                               'x' : .5})
+            return graph
         
 if __name__ == '__main__':
     app = create_dashboard()
