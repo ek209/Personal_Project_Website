@@ -97,57 +97,52 @@ def init_callbacks(app):
             Dash html.Div: Returns html.Div object containing the data to be loaded into the tab.
         """
         if tab == 'tab-1':
-            return html.Div([
-                html.H2('City Data'),
-                dcc.Input(id="city-name", type='text', placeholder="City Name", value="Glassell Park", debounce=True),
-                dcc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True),
-                dbc.Spinner(
-                    html.Div([dcc.Graph(id) for id in CITY_GRAPHS]),
-                    id="loading-1",
-                    fullscreen = True,
-                    type="grow")
-                ])
+            return html.Div([dbc.Row([dbc.Col(html.H2('City Data:'), width=2),
+                             dbc.Col(dcc.Input(id="city-name", type='text', placeholder="City Name", value="Glassell Park", debounce=True), width=2),
+                             dbc.Col(dcc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True), width=2),],
+                             class_name='justify-content-md-center g-0',
+                             align='center'),
+                             dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in CITY_GRAPHS])],
+                                         id="loading-1",
+                                         type="grow",
+                                         spinner_class_name='position-absolute top-0')
+                                         ])
         
         elif tab == 'tab-2':
             return html.Div([
                 html.H2('State Data'),
                 dcc.Input(id="state-name", type='text', placeholder="State Abbreviation", value="WA", debounce=True),
-                dbc.Spinner(
-                    html.Div([dcc.Graph(id) for id in STATE_GRAPHS]),
-                    id="loading-2",
-                    fullscreen = True,
-                    type="grow")
-                ])
+                dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in STATE_GRAPHS])],
+                            id="loading-2",
+                            type="grow",
+                            spinner_class_name='position-absolute top-0')
+                            ])
         
         elif tab == 'tab-3':
-            return html.Div([
-                html.H2('Postal Code Data'),
-                dcc.Input(id="postal-code", type='number', placeholder="Postal code", value=2128, debounce=True),
-                dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in ZIP_GRAPHS]),
-                                      html.Div([dcc.Dropdown(id='prop-year',
-                                                            options=[2023, 2022, 2021, 2020, 2019, 2018],
-                                                            value=2023),
-
-                                                #These graphs still need to be added into other locations and their own method to generate
-                                                dcc.Graph(id='zip-sales-by-year'),
-                                                dcc.Graph(id='zip-prop-type-sold-per-year'),
-                                                dcc.Graph(id='zip-prop-price-by-year')]
-                                                )],
-                            
-                            id="loading-3",
-                            fullscreen = True,
-                            type="grow")
-            ])
+            return html.Div([html.H2('Postal Code Data'),
+                            dcc.Input(id="postal-code", type='number', placeholder="Postal code", value=2128, debounce=True),
+                            dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in ZIP_GRAPHS]),
+                                                html.Div([dcc.Dropdown(id='prop-year',
+                                                                            options=[2023, 2022, 2021, 2020, 2019, 2018],
+                                                                            value=2023),
+                                                            #These graphs still need to be added into other locations and their own method to generate                                                
+                                                            dcc.Graph(id='zip-sales-by-year'),
+                                                            dcc.Graph(id='zip-prop-type-sold-per-year'),
+                                                            dcc.Graph(id='zip-prop-price-by-year')]
+                                                            )],    
+                                        id="loading-3",
+                                        type="grow",
+                                        spinner_class_name='position-absolute top-0')
+                            ])
         
         elif tab == "tab-4":
-            return html.Div([
-            html.H2('Location-Data'),
-            dcc.Input(id="location-name", type='text', placeholder="Market", value="North Tacoma", debounce=True),
-            dbc.Spinner(html.Div([dcc.Graph(id) for id in LOCATION_GRAPHS]),
-                        id="loading-4",
-                        fullscreen = True,
-                        type="grow")
-            ])
+            return html.Div([html.H2('Location-Data'),
+                            dcc.Input(id="location-name", type='text', placeholder="Market", value="North Tacoma", debounce=True),
+                            dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in LOCATION_GRAPHS])],
+                                        id="loading-4",
+                                        type="grow",
+                                        spinner_class_name='position-absolute top-0')
+                            ])
 
     @callback([Output(id, 'figure') for id in ZIP_GRAPHS],
         Output('zip-sales-by-year', 'figure'),
