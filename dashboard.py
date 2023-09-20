@@ -11,6 +11,17 @@ import os
 #TODO Create tabs to sort location data by categories (TAB INSIDE TAB)
 #TODO Add relationship for database for chloropleth maps.
 
+#This was removed from tab-3 spinner
+'''html.Div([dcc.Dropdown(id='prop-year',
+                options=[2023, 2022, 2021, 2020, 2019, 2018],
+                value=2023),
+#These graphs still need to be added into other locations and their own method to generate                                                
+dcc.Graph(id='zip-sales-by-year'),
+dcc.Graph(id='zip-prop-type-sold-per-year'),
+dcc.Graph(id='zip-prop-price-by-year')]
+)'''
+
+
 def postgres_connect():
     """Creates postgresql connection to RF_PG_DB
 
@@ -122,7 +133,7 @@ def init_callbacks(app):
                                     ],
                                     class_name='justify-content-md-center g-3',
                                     align='center'),
-                dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in STATE_GRAPHS])],
+                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in STATE_GRAPHS])],
                             id="loading-2",
                             type="grow",
                             spinner_class_name='position-absolute top-0')
@@ -132,26 +143,20 @@ def init_callbacks(app):
             return html.Div([
                 dbc.Row([html.H2('Postal Code Analysis')],
                          class_name='text-center'),
-                dbc.Row([dbc.Col(html.H3('Postal Code: '), 
+                dbc.Row(children=[dbc.Col(html.H3('Postal Code: '), 
                                  width=2, 
                                  class_name='text-end'),
-                         dbc.Col(dbc.Input(id="postal-code", type='number', placeholder="Postal code", value=2128, debounce=True),width=2)],
-                         class_name='justify-content-md-center g-3',
-                         align='center'),
-                            
-                dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in ZIP_GRAPHS]),
-                                    html.Div([dcc.Dropdown(id='prop-year',
-                                                                options=[2023, 2022, 2021, 2020, 2019, 2018],
-                                                                value=2023),
-                                                #These graphs still need to be added into other locations and their own method to generate                                                
-                                                dcc.Graph(id='zip-sales-by-year'),
-                                                dcc.Graph(id='zip-prop-type-sold-per-year'),
-                                                dcc.Graph(id='zip-prop-price-by-year')]
-                                                )],    
+                                dbc.Col(dbc.Input(id="postal-code", type='number', placeholder="Postal code", value=2128, debounce=True),width=2)],
+                                class_name='justify-content-md-center g-3',
+                                align='center'),            
+                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in ZIP_GRAPHS])],    
                             id="loading-3",
                             type="grow",
-                            spinner_class_name='position-absolute top-0')
+                            spinner_class_name='position-absolute top-0'),
                 ])
+
+
+
         
         elif tab == "tab-4":
             return html.Div([
@@ -161,20 +166,17 @@ def init_callbacks(app):
                     dbc.Col(dbc.Input(id="location-name", type='text', placeholder="Market", value="North Tacoma", debounce=True), width=2)],
                     class_name='justify-content-md-center g-3',
                     align='center'),
-                dbc.Spinner(children=[html.Div([dcc.Graph(id) for id in LOCATION_GRAPHS])],
+                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in LOCATION_GRAPHS])],
                             id="loading-4",
                             type="grow",
                             spinner_class_name='position-absolute top-0')
                             ])
 
     @callback([Output(id, 'figure') for id in ZIP_GRAPHS],
-        Output('zip-sales-by-year', 'figure'),
-        Output('zip-prop-type-sold-per-year', 'figure'),
-        Output('zip-prop-price-by-year', 'figure'),
+              [Output(f'{id}-text', 'title') for id in ZIP_GRAPHS],
         Input('postal-code', 'value'),
-        Input('prop-year', 'value')
     )
-    def zip_div(postal_code, prop_year):
+    def zip_div(postal_code):
         """Loads data from database into dataframe to use for creating graphs and
         html for the zip tab based on data from Input callbacks.
         graphs is converted to a tuple in order to be correctly passed as parameters.
@@ -192,18 +194,21 @@ def init_callbacks(app):
         graphs = compile_graphs(zip_df, postal_code)
 
         #TODO Create methods and clean this up in order to use for other locations
-        data_by_year = zip_df.query('sold_year == @prop_year')
+        '''data_by_year = zip_df.query('sold_year == @prop_year')
         prop_price_by_year = data_by_year[['property_type', 'price']].groupby('property_type', as_index=False).mean(True)
         zip_prop_price_by_year_bar = px.bar(prop_price_by_year, x=prop_price_by_year.get('property_type'), y=prop_price_by_year.get('price'))
         prop_to_year = data_by_year['property_type'].value_counts()
         zip_prop_type_sold_by_year = px.bar(prop_to_year, x=prop_to_year.get('property_type'), y=prop_to_year.get('count'))
         zip_count_by_year = zip_df['sold_year'].value_counts()
-        zip_sales_by_year = px.bar(zip_count_by_year, x=zip_count_by_year.get('year'), y=zip_count_by_year.get('count'))
-        graphs = graphs + [zip_sales_by_year, zip_prop_type_sold_by_year, zip_prop_price_by_year_bar]
-        return tuple(graphs)
+        zip_sales_by_year = px.bar(zip_count_by_year, x=zip_count_by_year.get('year'), y=zip_count_by_year.get('count'))'''
+        #graphs = graphs #+ [zip_sales_by_year, zip_prop_type_sold_by_year, zip_prop_price_by_year_bar]
+        titles = [graph.layout.title.text for graph in graphs]
+        print(titles)
+        return tuple(list(graphs) + titles)
 
     @callback(
         [Output(id, 'figure') for id in STATE_GRAPHS],
+        [Output(f'{id}-text', 'title') for id in STATE_GRAPHS],
         Input('state-name', 'value')
     )
     def state_div(state_name):
@@ -221,7 +226,8 @@ def init_callbacks(app):
         state_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE state_prov = (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(state_name,))
         con.close()
         graphs = compile_graphs(state_df, state_name)
-        return tuple(graphs)
+        titles = [graph.layout.title.text for graph in graphs]
+        return tuple(list(graphs) + titles)
 
     @callback([Output(id, 'figure') for id in CITY_GRAPHS],
               [Output(f'{id}-text', 'title') for id in CITY_GRAPHS],
@@ -252,6 +258,7 @@ def init_callbacks(app):
 
     @callback(
         [Output(id, 'figure') for id in LOCATION_GRAPHS],
+        [Output(f'{id}-text', 'title') for id in LOCATION_GRAPHS],
         Input('location-name', 'value')
     )
     def market_div(market_name):
@@ -270,7 +277,8 @@ def init_callbacks(app):
         market_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE location = (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(market_name,))
         con.close()
         graphs = compile_graphs(market_df, market_name)
-        return tuple(graphs)
+        titles = [graph.layout.title.text for graph in graphs]
+        return tuple(list(graphs) + titles)
 
     def prop_type_bar_graphs(dataframe, location):
         """Creates a list of bar graphs using data from dataframe, with location being passed
