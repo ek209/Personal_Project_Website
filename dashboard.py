@@ -112,7 +112,7 @@ def init_callbacks(app):
             return html.Div([
                 dbc.Row([html.H2('City Analysis')],
                         class_name='text-center'),
-                dbc.Row([dbc.Col(html.H3('City Data: '), width=2, class_name='text-end'),
+                dbc.Row([dbc.Col(html.H3('City: '), width=2, class_name='text-end'),
                              dbc.Col(dbc.Input(id="city-name", type='text', placeholder="City Name", value="Glassell Park", debounce=True), width=2),
                              dbc.Col(dbc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True), width=2),],
                              class_name='justify-content-md-center g-3',
@@ -172,9 +172,10 @@ def init_callbacks(app):
                             spinner_class_name='position-absolute top-0')
                             ])
 
-    @callback([Output(id, 'figure') for id in ZIP_GRAPHS],
-              [Output(f'{id}-text', 'title') for id in ZIP_GRAPHS],
-        Input('postal-code', 'value'),
+    @callback(
+            [Output(id, 'figure') for id in ZIP_GRAPHS],
+            [Output(f'{id}-text', 'title') for id in ZIP_GRAPHS],
+            Input('postal-code', 'value'),
     )
     def zip_div(postal_code):
         """Loads data from database into dataframe to use for creating graphs and
@@ -183,27 +184,15 @@ def init_callbacks(app):
 
         Args:
             postal_code (Int): Postal code to query from databse
-            prop_year (Int): Year of property sold to query
-
+            
         Returns:
-            Tuple(figures): Returns a tuple of plotly graphs to send to Output callbacks
+            Tuple(figures, titles): Returns a tuple of plotly graphs to send to Output callbacks
         """
         con = postgres_connect()
         zip_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE postal_code LIKE (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(str(postal_code) + '%',))
         con.close()
         graphs = compile_graphs(zip_df, postal_code)
-
-        #TODO Create methods and clean this up in order to use for other locations
-        '''data_by_year = zip_df.query('sold_year == @prop_year')
-        prop_price_by_year = data_by_year[['property_type', 'price']].groupby('property_type', as_index=False).mean(True)
-        zip_prop_price_by_year_bar = px.bar(prop_price_by_year, x=prop_price_by_year.get('property_type'), y=prop_price_by_year.get('price'))
-        prop_to_year = data_by_year['property_type'].value_counts()
-        zip_prop_type_sold_by_year = px.bar(prop_to_year, x=prop_to_year.get('property_type'), y=prop_to_year.get('count'))
-        zip_count_by_year = zip_df['sold_year'].value_counts()
-        zip_sales_by_year = px.bar(zip_count_by_year, x=zip_count_by_year.get('year'), y=zip_count_by_year.get('count'))'''
-        #graphs = graphs #+ [zip_sales_by_year, zip_prop_type_sold_by_year, zip_prop_price_by_year_bar]
         titles = [graph.layout.title.text for graph in graphs]
-        print(titles)
         return tuple(list(graphs) + titles)
 
     @callback(
@@ -220,7 +209,7 @@ def init_callbacks(app):
             state_name (String): State or province abbreviation as two letters. Ex: WA
 
         Returns:
-            Tuple(figures): Returns a tuple of plotly graphs to send to Output callbacks        """
+            Tuple(figures, titles): Returns a tuple of plotly graphs to send to Output callbacks."""
         
         con = postgres_connect()
         state_df = pd.read_sql(("SELECT *  FROM sold_properties WHERE state_prov = (%s) AND property_type != 'Other' and property_type != 'Unknown'"), con, params=(state_name,))
@@ -245,7 +234,7 @@ def init_callbacks(app):
             This state should contain the city to be searched
 
         Returns:
-            Tuple(figures): Returns a tuple of plotly graphs to send to Output callbacks
+            Tuple(figures, titles): Returns a tuple of plotly graphs to send to Output callbacks.
         """
 
         con = postgres_connect()
@@ -270,7 +259,7 @@ def init_callbacks(app):
             market_name (String): Market to search for properties in
 
         Returns:
-            Tuple(figures): Returns a tuple of plotly graphs to send to Output callbacks
+            Tuple(figures, titles): Returns a tuple of plotly graphs to send to Output callbacks.
         """
 
         con = postgres_connect()
@@ -291,9 +280,8 @@ def init_callbacks(app):
         Returns:
             List: List of plotly bar graphs
         """
-        column_list = ['price', 'beds', 'baths', 'sqft', 'lot_size', 'price_per_sqft']
+        column_list = ['price', 'beds', 'baths', 'sqft', 'lot_size', 'price_per_sqft', 'year_built']
         bar_figure_list = [bar_property_price_v_avg_var(dataframe, location, column) for column in column_list]
-        bar_figure_list.append(bar_average_year_built_by_prop_type(dataframe, location))
         return bar_figure_list
 
     def prop_type_scatter_graphs(dataframe, location):
@@ -453,48 +441,14 @@ def init_callbacks(app):
                         x=avg_price.get('property_type'),
                         y=avg_price.get(secondary_column),
                         color="property_type",
-                        title=f"Average {GRAPH_FORMAT_MAP[secondary_column]} by property type {location}",
+                        title=f"Average {GRAPH_FORMAT_MAP[secondary_column]} by Property Type {location}",
                         labels={secondary_column : f"Average {GRAPH_FORMAT_MAP[secondary_column]}",
                                 "property_type" : "Property Type"})
-            
+            if secondary_column == 'year_built':
+                graph.update_layout(yaxis={'range' : [dataframe['year_built'].min(), datetime.date.today().year]})
             graph.update_layout(title={
                     'xanchor' : 'center',
                     'x' : .5})
-            return graph
-
-    def bar_average_year_built_by_prop_type(dataframe, location):
-        #TODO Create if statement from other bar chart method to set range
-        #if secondary_column is year_built instead of seperate method
-        secondary_column = 'year_built'
-        """Takes dataframe and creates bar chart based on property_type distribution and 
-        average of secondary_column. Changes y axis range to better show years. Removes Unknown, Other, and Timeshare property types from dataframe
-        before creating figure. If empty dataframe returns None.
-
-        Args:
-            dataframe (Dataframe): Dataframe with property_type and price data to chart.
-            location (String): location for population of graph labels
-            secondary_column (String): Name of column in Dataframe to plot as y axis
-        Returns:
-            figure: Plotly express bar chart
-        """
-        dataframe[~dataframe['property_type'].isin(['Unknown', 'Other', 'Timeshare'])]
-
-        avg = dataframe[['property_type', secondary_column]].groupby('property_type', as_index=False).mean(True).dropna()
-        if avg.shape[0] == 0:
-            return None
-        else:    
-            graph = px.bar(avg,
-                        x=avg.get('property_type'),
-                        y=avg.get(secondary_column),
-                        color="property_type",
-                        title=f"Average year built by property type for {location}",
-                        range_y=[1900, datetime.date.today().year],
-                        labels={secondary_column : GRAPH_FORMAT_MAP[secondary_column],
-                                "property_type" : "Property Type"})
-
-            graph.update_layout(title={
-                               'xanchor' : 'center',
-                               'x' : .5})
             return graph
         
 if __name__ == '__main__':
