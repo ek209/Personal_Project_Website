@@ -11,17 +11,6 @@ import os
 #TODO Create tabs to sort location data by categories (TAB INSIDE TAB)
 #TODO Add relationship for database for chloropleth maps.
 
-#This was removed from tab-3 spinner
-'''html.Div([dcc.Dropdown(id='prop-year',
-                options=[2023, 2022, 2021, 2020, 2019, 2018],
-                value=2023),
-#These graphs still need to be added into other locations and their own method to generate                                                
-dcc.Graph(id='zip-sales-by-year'),
-dcc.Graph(id='zip-prop-type-sold-per-year'),
-dcc.Graph(id='zip-prop-price-by-year')]
-)'''
-
-
 def postgres_connect():
     """Creates postgresql connection to RF_PG_DB
 
@@ -37,6 +26,34 @@ def postgres_connect():
     con.autocommit = True
     return con
 
+def tab_html(location):
+    location_type = location[0]
+    value = location[1]
+    row1 = dbc.Row([html.H2(f'{location_type} Analysis')],
+                        class_name='text-center'),
+    
+    col1 = dbc.Col(html.H3(f'{location_type}: '), width=2, class_name='text-end'),
+    print(type(value))
+    if type(value) == str:
+        col2 = dbc.Col(dbc.Input(id=f"{location_type}-name", type='text', placeholder=f"{location_type} Name", value=value, debounce=True), width=2),
+    elif type(value) == int:
+        col2 = dbc.Col(dbc.Input(id=f"{location_type}-name", type='number', placeholder=f"{location_type} Name", value=value, debounce=True), width=2)
+
+    col3 = None
+    if location_type == 'City': 
+        col3 = dbc.Col(dbc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True), width=2)
+
+    row2 = dbc.Row(children=[col1,col2,col3],                           
+                   class_name='justify-content-md-center g-3',
+                   align='center')
+                             
+    spinner = dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT[location_type]])],
+                          id="loading-1",
+                          type="grow",
+                          spinner_class_name='position-absolute top-0')
+    
+    return html.Div(children=[row1,row2,spinner])
+
 #This dictionary is used to clean up graph titles and labels for columns so labels can be variables
 GRAPH_FORMAT_MAP = {'sqft' : 'Square Feet',
                     'lot_size' : 'Lot Size',
@@ -49,10 +66,12 @@ GRAPH_FORMAT_MAP = {'sqft' : 'Square Feet',
 
 #Auto populates graph-ids for use in callbacks for each tab, could these be moved into tabs?
 GRAPHS = 12
-CITY_GRAPHS = [f"city-graph-{num}" for num in range(0,GRAPHS)]
-STATE_GRAPHS = [f"state-graph-{num}" for num in range(0,GRAPHS)]
-ZIP_GRAPHS = [f"zip-graph-{num}" for num in range(0,GRAPHS)]
-LOCATION_GRAPHS = [f"location-graph-{num}" for num in range(0, GRAPHS)]
+GRAPH_DICT = {
+'City' : [f"city-graph-{num}" for num in range(0,GRAPHS)],
+'State' : [f"state-graph-{num}" for num in range(0,GRAPHS)],
+'Postal Code' : [f"zip-graph-{num}" for num in range(0,GRAPHS)],
+'Market' : [f"market-graph-{num}" for num in range(0, GRAPHS)],
+}
 
 def create_dashboard(server=False):
     """Creates a dash dashboard application and adds it to a flask server. If no flask server is passed,
@@ -74,13 +93,11 @@ def create_dashboard(server=False):
         app = Dash(__name__, suppress_callback_exceptions=True, assets_folder=assets_path, external_scripts=scripts_path, external_stylesheets=css_path)
     
     app.title = "Redfin Data Dashboard"
+    location_type_list = ['City', 'State', 'Postal Code', 'Market']
     app.layout = html.Div([
         (html.H1(dbc.Row(f'Data from: {datetime.date.today()}', justify='center', class_name='text-dark bg-light'))),
         dbc.Tabs(id='tabs-example-1', active_tab='tab-1', children=[
-            dbc.Tab(label='City', tab_id='tab-1', label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark'),
-            dbc.Tab(label='State', tab_id='tab-2', label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark'),
-            dbc.Tab(label='Postal code', tab_id='tab-3', label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark'),
-            dbc.Tab(label='Market', tab_id='tab-4',  label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark')
+            dbc.Tab(label=location_type, tab_id=f'tab-{tab_number}', label_class_name='text-secondary', activeLabelClassName = 'fw-bold fst-italic text-dark') for location_type, tab_number in zip(location_type_list, range(1,len(location_type_list) +  1))
         ]),
         html.Div(id='tabs-example-content-1')
     ])
@@ -108,17 +125,22 @@ def init_callbacks(app):
         Returns:
             Dash html.Div: Returns html.Div object containing the data to be loaded into the tab.
         """
+        location_type_list = {'City' : 'Glassell Park', 'State' : 'WA', 'Postal Code' : 2128, 'Market' : 'North Tacoma'}
+        print(location_type_list.items())
+        tab_dictionary = {f'tab-{tab_number}' : tab_html(location) for location, tab_number in zip(location_type_list.items(), range(0,len(location_type_list) + 1))}
+        print(tab_dictionary[tab])
         if tab == 'tab-1':
+            print(tab_dictionary[tab])
             return html.Div([
                 dbc.Row([html.H2('City Analysis')],
                         class_name='text-center'),
                 dbc.Row([dbc.Col(html.H3('City: '), width=2, class_name='text-end'),
-                             dbc.Col(dbc.Input(id="city-name", type='text', placeholder="City Name", value="Glassell Park", debounce=True), width=2),
+                             dbc.Col(dbc.Input(id="City-name", type='text', placeholder="City Name", value="Glassell Park", debounce=True), width=2),
                              dbc.Col(dbc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True), width=2),],
                              class_name='justify-content-md-center g-3',
                              align='center'),
                              
-                             dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in CITY_GRAPHS])],
+                             dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT['City']])],
                                          id="loading-1",
                                          type="grow",
                                          spinner_class_name='position-absolute top-0')
@@ -129,11 +151,11 @@ def init_callbacks(app):
                         class_name='text-center'),
                 dbc.Row(children=[
                                     dbc.Col(html.H3('State: '), width=2, class_name='text-end'),
-                                    dbc.Col(dbc.Input(id="state-name", type='text', placeholder="State Abbreviation", value="WA", debounce=True), width=2),
+                                    dbc.Col(dbc.Input(id="State-name", type='text', placeholder="State Abbreviation", value="WA", debounce=True), width=2),
                                     ],
                                     class_name='justify-content-md-center g-3',
                                     align='center'),
-                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in STATE_GRAPHS])],
+                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT['State']])],
                             id="loading-2",
                             type="grow",
                             spinner_class_name='position-absolute top-0')
@@ -146,10 +168,10 @@ def init_callbacks(app):
                 dbc.Row(children=[dbc.Col(html.H3('Postal Code: '), 
                                  width=2, 
                                  class_name='text-end'),
-                                dbc.Col(dbc.Input(id="postal-code", type='number', placeholder="Postal code", value=2128, debounce=True),width=2)],
+                                dbc.Col(dbc.Input(id="Postal Code-name", type='number', placeholder="Postal code", value=2128, debounce=True),width=2)],
                                 class_name='justify-content-md-center g-3',
                                 align='center'),            
-                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in ZIP_GRAPHS])],    
+                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT['Postal Code']])],    
                             id="loading-3",
                             type="grow",
                             spinner_class_name='position-absolute top-0'),
@@ -163,19 +185,19 @@ def init_callbacks(app):
                 dbc.Row(html.H2('Market Analysis'),class_name='text-center'),
                 dbc.Row([
                     dbc.Col(html.H3('Market: '),width=2,class_name='text-end'),
-                    dbc.Col(dbc.Input(id="location-name", type='text', placeholder="Market", value="North Tacoma", debounce=True), width=2)],
+                    dbc.Col(dbc.Input(id="Market-name", type='text', placeholder="Market", value="North Tacoma", debounce=True), width=2)],
                     class_name='justify-content-md-center g-3',
                     align='center'),
-                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in LOCATION_GRAPHS])],
+                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT['Market']])],
                             id="loading-4",
                             type="grow",
                             spinner_class_name='position-absolute top-0')
                             ])
 
     @callback(
-            [Output(id, 'figure') for id in ZIP_GRAPHS],
-            [Output(f'{id}-text', 'title') for id in ZIP_GRAPHS],
-            Input('postal-code', 'value'),
+            [Output(id, 'figure') for id in GRAPH_DICT['Postal Code']],
+            [Output(f'{id}-text', 'title') for id in GRAPH_DICT['Postal Code']],
+            Input('Postal Code-name', 'value'),
     )
     def zip_div(postal_code):
         """Loads data from database into dataframe to use for creating graphs and
@@ -196,9 +218,9 @@ def init_callbacks(app):
         return tuple(list(graphs) + titles)
 
     @callback(
-        [Output(id, 'figure') for id in STATE_GRAPHS],
-        [Output(f'{id}-text', 'title') for id in STATE_GRAPHS],
-        Input('state-name', 'value')
+        [Output(id, 'figure') for id in GRAPH_DICT['State']],
+        [Output(f'{id}-text', 'title') for id in GRAPH_DICT['State']],
+        Input('State-name', 'value')
     )
     def state_div(state_name):
         """Loads data from database into dataframe to use for creating graphs and
@@ -218,9 +240,9 @@ def init_callbacks(app):
         titles = [graph.layout.title.text for graph in graphs]
         return tuple(list(graphs) + titles)
 
-    @callback([Output(id, 'figure') for id in CITY_GRAPHS],
-              [Output(f'{id}-text', 'title') for id in CITY_GRAPHS],
-        Input('city-name', 'value'),
+    @callback([Output(id, 'figure') for id in GRAPH_DICT['City']],
+              [Output(f'{id}-text', 'title') for id in GRAPH_DICT['City']],
+        Input('City-name', 'value'),
         Input('state-abbreviation-city', 'value')
     )
     def city_div(city_name, state_name):
@@ -246,9 +268,9 @@ def init_callbacks(app):
 
 
     @callback(
-        [Output(id, 'figure') for id in LOCATION_GRAPHS],
-        [Output(f'{id}-text', 'title') for id in LOCATION_GRAPHS],
-        Input('location-name', 'value')
+        [Output(id, 'figure') for id in GRAPH_DICT['Market']],
+        [Output(f'{id}-text', 'title') for id in GRAPH_DICT['Market']],
+        Input('Market-name', 'value')
     )
     def market_div(market_name):
         """Loads data from database into dataframe to use for creating graphs and
@@ -453,4 +475,4 @@ def init_callbacks(app):
         
 if __name__ == '__main__':
     app = create_dashboard()
-    app.run()
+    app.run(debug=True)
