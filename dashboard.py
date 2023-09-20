@@ -6,8 +6,6 @@ import psycopg2
 import datetime
 import os
 
-#TODO Clean up methods for dbc creation
-#TODO Move year_built bar graph into main method and use if statement to change y range
 #TODO Create tabs to sort location data by categories (TAB INSIDE TAB)
 #TODO Add relationship for database for chloropleth maps.
 
@@ -27,28 +25,35 @@ def postgres_connect():
     return con
 
 def tab_html(location):
+    """Creates html objects for each tab
+
+    Args:
+        location (Tuple): (Location as String, Default Input value as str or INT)
+
+    Returns:
+        html.Div: Html containing the data for each tab of object.
+    """
     location_type = location[0]
     value = location[1]
     row1 = dbc.Row([html.H2(f'{location_type} Analysis')],
-                        class_name='text-center'),
+                        class_name='text-center')
     
-    col1 = dbc.Col(html.H3(f'{location_type}: '), width=2, class_name='text-end'),
-    print(type(value))
-    if type(value) == str:
-        col2 = dbc.Col(dbc.Input(id=f"{location_type}-name", type='text', placeholder=f"{location_type} Name", value=value, debounce=True), width=2),
-    elif type(value) == int:
+    col1 = dbc.Col(html.H3(f'{location_type}: '), width=2, class_name='text-end')
+    if isinstance(value, str):
+        col2 = dbc.Col(dbc.Input(id=f"{location_type}-name", type='text', placeholder=f"{location_type} Name", value=value, debounce=True), width=2)
+    elif isinstance(value, int):
         col2 = dbc.Col(dbc.Input(id=f"{location_type}-name", type='number', placeholder=f"{location_type} Name", value=value, debounce=True), width=2)
-
-    col3 = None
+    
+    col3=html.Div()
     if location_type == 'City': 
         col3 = dbc.Col(dbc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True), width=2)
-
+    
     row2 = dbc.Row(children=[col1,col2,col3],                           
                    class_name='justify-content-md-center g-3',
                    align='center')
-                             
+    
     spinner = dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT[location_type]])],
-                          id="loading-1",
+                          id=f"loading-{location_type}",
                           type="grow",
                           spinner_class_name='position-absolute top-0')
     
@@ -126,73 +131,11 @@ def init_callbacks(app):
             Dash html.Div: Returns html.Div object containing the data to be loaded into the tab.
         """
         location_type_list = {'City' : 'Glassell Park', 'State' : 'WA', 'Postal Code' : 2128, 'Market' : 'North Tacoma'}
-        print(location_type_list.items())
-        tab_dictionary = {f'tab-{tab_number}' : tab_html(location) for location, tab_number in zip(location_type_list.items(), range(0,len(location_type_list) + 1))}
-        print(tab_dictionary[tab])
-        if tab == 'tab-1':
-            print(tab_dictionary[tab])
-            return html.Div([
-                dbc.Row([html.H2('City Analysis')],
-                        class_name='text-center'),
-                dbc.Row([dbc.Col(html.H3('City: '), width=2, class_name='text-end'),
-                             dbc.Col(dbc.Input(id="City-name", type='text', placeholder="City Name", value="Glassell Park", debounce=True), width=2),
-                             dbc.Col(dbc.Input(id="state-abbreviation-city", type='text', placeholder="State Abbreviation", value="CA", debounce=True), width=2),],
-                             class_name='justify-content-md-center g-3',
-                             align='center'),
-                             
-                             dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT['City']])],
-                                         id="loading-1",
-                                         type="grow",
-                                         spinner_class_name='position-absolute top-0')
-                                         ]),
-        elif tab == 'tab-2':
-            return html.Div([
-                dbc.Row([html.H2('State Analysis')],
-                        class_name='text-center'),
-                dbc.Row(children=[
-                                    dbc.Col(html.H3('State: '), width=2, class_name='text-end'),
-                                    dbc.Col(dbc.Input(id="State-name", type='text', placeholder="State Abbreviation", value="WA", debounce=True), width=2),
-                                    ],
-                                    class_name='justify-content-md-center g-3',
-                                    align='center'),
-                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT['State']])],
-                            id="loading-2",
-                            type="grow",
-                            spinner_class_name='position-absolute top-0')
-                            ])
+        tab_dictionary = {f'tab-{tab_number}' : location for location, tab_number in zip(location_type_list.items(), range(1,len(location_type_list) + 1))}
         
-        elif tab == 'tab-3':
-            return html.Div([
-                dbc.Row([html.H2('Postal Code Analysis')],
-                         class_name='text-center'),
-                dbc.Row(children=[dbc.Col(html.H3('Postal Code: '), 
-                                 width=2, 
-                                 class_name='text-end'),
-                                dbc.Col(dbc.Input(id="Postal Code-name", type='number', placeholder="Postal code", value=2128, debounce=True),width=2)],
-                                class_name='justify-content-md-center g-3',
-                                align='center'),            
-                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT['Postal Code']])],    
-                            id="loading-3",
-                            type="grow",
-                            spinner_class_name='position-absolute top-0'),
-                ])
-
-
-
-        
-        elif tab == "tab-4":
-            return html.Div([
-                dbc.Row(html.H2('Market Analysis'),class_name='text-center'),
-                dbc.Row([
-                    dbc.Col(html.H3('Market: '),width=2,class_name='text-end'),
-                    dbc.Col(dbc.Input(id="Market-name", type='text', placeholder="Market", value="North Tacoma", debounce=True), width=2)],
-                    class_name='justify-content-md-center g-3',
-                    align='center'),
-                dbc.Spinner(children=[dbc.Accordion([dbc.AccordionItem(id=f'{id}-text', children=[html.Div([dcc.Graph(id)])]) for id in GRAPH_DICT['Market']])],
-                            id="loading-4",
-                            type="grow",
-                            spinner_class_name='position-absolute top-0')
-                            ])
+        #if tab == 'tab-1':
+        return tab_html(tab_dictionary[tab])
+            
 
     @callback(
             [Output(id, 'figure') for id in GRAPH_DICT['Postal Code']],
