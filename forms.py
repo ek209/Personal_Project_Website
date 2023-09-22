@@ -23,6 +23,6 @@ class WatermarkForm(FlaskForm):
     watermark_text = StringField('Text', validators=[Length(max=1000)])
     img_to_mark = FileField('Image', validators=[DataRequired()])
     font_size = IntegerField('Font size', validators=[DataRequired()])
-    font_name = SelectField('Font', choices=['Dejavu Sans Mono'],)
-    add_space = SelectField('Add space at end?', choices=['Yes', 'No'])
+    font_name = SelectField('Font', choices=['Dejavu Sans Mono'], validators=[DataRequired()])
+    add_space = SelectField('Add space at end?', choices=['Yes', 'No'], validators=[DataRequired()])
     submit = SubmitField('Watermark')

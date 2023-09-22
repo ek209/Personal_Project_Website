@@ -89,7 +89,7 @@ def morse_converter():
         form.morse.data = "Enter morse here..."
         form.english.data = "Enter english here..."
     github_proj_link = 'Text_To_Morse'
-    return render_template('project-page.html', form=form, github_link=github_proj_link)
+    return render_template('morse.html', form=form, github_link=github_proj_link)
 
 @app.route('/projects/tic_tac_toe')
 def tic_tac_toe():

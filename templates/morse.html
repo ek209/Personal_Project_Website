@@ -1,0 +1,47 @@
+{% extends "project_base.html" %}
+{% block title %}
+Morse Translator
+{% endblock %}
+{% block subtitle %}
+Convert from morse to English or English to morse!
+{% endblock %}
+{% block content %}
+{{render_form(form, render_kw={"onsubmit":"return false;"})}}
+{% block script %}
+<script>
+    document.getElementById("convert_morse").addEventListener("click", function () {
+        let english = document.getElementById("english").value
+        let formData = {"csrf" : document.getElementById("csrf_token").value,
+                        "morse" : null,
+                        "english" : english}
+        fetch("{{ url_for('morse_converter') }}", {
+            "method": "POST",
+            "body": JSON.stringify(formData),
+            "headers" : {"Content-Type": "application/json"},
+
+        })
+            .then(response => response.json())
+            .then(response => {
+              document.getElementById("morse").value = (response["translation"]);
+            });
+    });
+    document.getElementById("convert_english").addEventListener("click", function () {
+        let morse = document.getElementById("morse").value
+        let formData = {"csrf" : document.getElementById("csrf_token").value,
+                        "morse" : morse,
+                        "english" : null}
+        fetch("{{ url_for('morse_converter') }}", {
+            "method": "POST",
+            "body": JSON.stringify(formData),
+            "headers" : {"Content-Type": "application/json"},
+
+        })
+            .then(response => response.json())
+            .then(response => {
+              document.getElementById("english").value = (response["translation"]);
+            });
+    });
+</script>
+
+{% endblock %}
+{% endblock %}
