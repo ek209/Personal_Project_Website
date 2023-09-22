@@ -7,13 +7,41 @@
     <div class="col-lg-6 mx-auto">
       <p class="lead mb-4">Watermark images from entered text</p>
       <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-        {{render_form(form)}}
+        {{render_form(form, render_kw={"onsubmit":"return false;"})}}
+        <script>document.getElementById("submit").addEventListener("click", async function () {
+          var file = document.getElementById("img_to_mark").files[0];
+          const read = (blob) => new Promise((resolve, 
+          reject) =>{
+            const reader = new FileReader();
+            reader.onload = (event) =>
+          resolve(event.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          read(file).then((result) => {
+          let formData = {"csrf" : document.getElementById("csrf_token").value,
+                          "watermark_text" : document.getElementById("watermark_text").value,
+                          "img_to_mark" : result,
+                          "font_size" : document.getElementById("font_size").value,
+                          "font_name" : document.getElementById("font_name").value,
+                          "add_space" : document.getElementById("add_space").value,
+                        }
+          
+          fetch("{{ url_for('image_watermarker') }}", {
+                  "method": "POST",
+                  "body": JSON.stringify(formData),
+                  "headers" : {"Content-Type": "application/json"},
+
+              })
+              .then(response => response.json())
+                  .then(response => {
+                                        document.getElementById("watermark-img").src = response["watermark_img"];
+                  });
+                });});</script>
       </div>
-      <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-      {% if new_img != [0, 0] %} 
-        <img src={{new_img}}>
-      {% endif %}
-      </div
+      <div class="d-grid gap-2 py-2 d-md-flex justify-content-md-center">
+        <img id='watermark-img' src=''>
+      </div>
     </div>
     {% include "github-proj-link.html" %}
   </div>

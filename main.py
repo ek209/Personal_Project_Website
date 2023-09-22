@@ -10,12 +10,15 @@ from matplotlib import image
 import matplotlib
 matplotlib.use('Agg')
 from PIL import Image
+import numpy as np
 import io
 import base64
 from dashboard import create_dashboard
 from redfin_api import redfin_api_home
-#TODO Use sql alchemy instead of psycopg2 for db connections, works but not officially supported
+import urllib
 
+#TODO Use sql alchemy instead of psycopg2 for db connections, works but not officially supported
+#TODO Clear up morse variables, gets confusing to distinguish
 
 app = Flask(__name__)
 app.register_blueprint(redfin_api_home, url_prefix='/redfin_api')
@@ -51,23 +54,26 @@ def projects():
 
 @app.route('/projects/Image-Watermarker', methods=['POST', 'GET'])
 def image_watermarker():
-    base64img = [0, 0]
     form = WatermarkForm()
-    if form.validate_on_submit():
-        img = image.imread(form.img_to_mark.data)
-        watermarker = Watermark(form.font_size.data,
-                                form.font_name.data,
-                                form.watermark_text.data)
-        if form.add_space.data == 'Yes':
-            watermarker.add_space()
-        new_img_arr = watermarker.make_watermark(img)
-        new_img = Image.fromarray(new_img_arr.astype('uint8'))
-        file_object = io.BytesIO()
-        new_img.save(file_object, 'PNG')
-        file_object.seek(0)
-        base64img = "data:image/png;base64,"+base64.b64encode(file_object.getvalue()).decode('ascii')
-
-    return render_template('image_watermarker.html', form=form, new_img=base64img)
+    if request.method == "POST": 
+        text_list=['watermark_text', 'img_to_mark', 'font_size', 'font_name', 'add_space']
+        if all([text in request.json for text in text_list]):
+            img = np.array(Image.open(urllib.request.urlopen(request.json['img_to_mark'])))
+            watermarker = Watermark(int(request.json['font_size']),
+                            request.json['font_name'],
+                            request.json['watermark_text'])
+            if request.json['add_space'] == 'Yes':
+                watermarker.add_space()
+            new_img_arr = watermarker.make_watermark(img)
+            new_img = Image.fromarray(new_img_arr.astype('uint8'))
+            file_object = io.BytesIO()
+            new_img.save(file_object, 'PNG')
+            file_object.seek(0)
+            base64img = "data:image/png;base64,"+base64.b64encode(file_object.getvalue()).decode('ascii')
+            return {'watermark_img' : base64img}
+        else: 
+            return {'watermark_img' : ''}
+    return render_template('image_watermarker.html', form=form)
 
 @app.route('/projects/Morse-Converter', methods=['GET', 'POST'])
 def morse_converter():

@@ -8,6 +8,7 @@ import os
 
 #TODO Create tabs to sort location data by categories (TAB INSIDE TAB)
 #TODO Add relationship for database for chloropleth maps.
+#TODO Merge callbacks using variables and list comp.
 
 def postgres_connect():
     """Creates postgresql connection to RF_PG_DB
