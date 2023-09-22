@@ -1,20 +1,11 @@
-{% include "header.html" %}
-{% from 'bootstrap5/form.html' import render_form %}
-
-<div class="px-4 text-center">
-    <img class="d-block mx-auto mb-4" src={{url_for('static', filename='/assets/img/projects_page.png')}} alt="" width="1024" height="256">
-    <h1 class="display-5 fw-bold text-body-emphasis">Redfin Data Pipeline</h1>
-    <div class="col-lg-6 mx-auto">
-      <p class="lead mb-4">Scraper, API, and data dash board for Redfin sold properties.
-        *Entire dataset not uploaded to database due to space constraints.
-      </p>
-      <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-        <a class="btn btn-secondary btn-md btn-block" href="{{ url_for('render_dashboard')}}" role="button">Dashboard</a>
-        <a class="btn btn-secondary btn-md btn-block" href="{{ url_for('redfin_api_home.home')}}" role="button">API</a>
-      </div>
-    </div>
-    {% include "github-proj-link.html" %}
-  </div>
-</div>
-
-{% include "footer.html" %}
+{% extends "project_base.html" %}
+{% block title %}
+Redfin Data Pipeline
+{% endblock %}
+{% block subtitle %}
+Scraper, API, and data dashboard for Redfin sold properties.
+{% endblock %}
+{% block content %}
+  <a class="btn btn-secondary btn-md btn-block" href="{{ url_for('render_dashboard')}}" role="button">Dashboard</a>
+  <a class="btn btn-secondary btn-md btn-block" href="{{ url_for('redfin_api_home.home')}}" role="button">API</a>
+{% endblock %}

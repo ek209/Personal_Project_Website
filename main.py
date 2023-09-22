@@ -6,7 +6,6 @@ from flask_ckeditor import CKEditor
 from forms import MorseForm, WatermarkForm
 from morse import morse_to_english, english_to_morse
 from watermark import Watermark
-from matplotlib import image
 import matplotlib
 matplotlib.use('Agg')
 from PIL import Image
@@ -43,10 +42,14 @@ def about_me():
 def render_dashboard():
     return redirect('/rf_dashboard')
 
+@app.route('/projects/typing_speed_test')
+def speed_test():
+    pass
+
 @app.route('/projects/redfin_scraper')
 def redfin_scraper():
     git_hub_proj_link = 'Redfin_Scraper'
-    return render_template("redfin_project.html", github=git_hub_proj_link)
+    return render_template("redfin_project.html", github_link=git_hub_proj_link)
 
 @app.route('/projects')
 def projects():
@@ -73,7 +76,8 @@ def image_watermarker():
             return {'watermark_img' : base64img}
         else: 
             return {'watermark_img' : ''}
-    return render_template('image_watermarker.html', form=form)
+    github_proj_link = 'Image_Watermarker'
+    return render_template('image_watermarker.html', github_link=github_proj_link, form=form)
 
 @app.route('/projects/Morse-Converter', methods=['GET', 'POST'])
 def morse_converter():
