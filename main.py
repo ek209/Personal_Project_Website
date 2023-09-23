@@ -3,8 +3,9 @@ from flask import Flask, render_template, redirect, url_for, jsonify, request
 from flask_bootstrap import Bootstrap5
 import datetime
 from flask_ckeditor import CKEditor
-from forms import MorseForm, WatermarkForm
+from forms import MorseForm, WatermarkForm, TypingSpeedTestForm
 from morse import morse_to_english, english_to_morse
+from speed_typer import Speed_Test
 from watermark import Watermark
 import matplotlib
 matplotlib.use('Agg')
@@ -42,9 +43,23 @@ def about_me():
 def render_dashboard():
     return redirect('/rf_dashboard')
 
-@app.route('/projects/typing_speed_test')
+
+@app.route('/projects/typing_speed_test', methods=['GET', 'POST'])
 def speed_test():
-    pass
+    form = TypingSpeedTestForm()
+    git_hub_proj_link = 'Typing_Speed_Test'
+    test = Speed_Test()
+    if request.method == 'POST':
+        if request.json['button'] == 'start':
+            test = Speed_Test()
+            return {'sentence' : test.sentence}
+        elif request.json['button'] == 'stop':
+            test.sentence = request.json['sentence_text']
+            test.score_test(request.json['text'], request.json['seconds'])
+            return {'results' : test.results}
+            
+
+    return render_template('speedtest.html', github_link=git_hub_proj_link, form=form)
 
 @app.route('/projects/redfin_scraper')
 def redfin_scraper():

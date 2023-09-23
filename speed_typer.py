@@ -18,7 +18,7 @@ class Speed_Test():
         wpm = round( self.short_list / minutes)
         cpm = round( self.shorter_string / minutes, 2)
         adjusted_wpm = round(cpm / 5, 2)
-        print(f'Congrats! You typed {adjusted_wpm} words per minute with {self.word_accuracy}% accuracy, {self.char_accuracy}% character accuracy  ({cpm} characters, {wpm} actual words)')
+        self.results = f'Congrats! You typed {adjusted_wpm} words per minute with {self.word_accuracy}% accuracy, {self.char_accuracy}% character accuracy  ({cpm} characters, {wpm} actual words)'
     
     #scores the test
     def score_test(self, typed_string, elapsed_time):
@@ -76,3 +76,5 @@ class Speed_Test():
     
     def print_sentence(self):
         print(self.sentence)
+
+    

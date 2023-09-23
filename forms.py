@@ -14,6 +14,11 @@ class MorseForm(FlaskForm):
     convert_morse = SubmitField('Convert to Morse')
     convert_english = SubmitField('Convert to English')
 
+class TypingSpeedTestForm(FlaskForm):
+    text = CKEditorField("Type Here: ")
+    start = SubmitField("Start")
+    stop = SubmitField("Stop")
+
 class WatermarkForm(FlaskForm):
     """Creates the form for Image Watermarker
 

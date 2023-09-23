@@ -6,4 +6,81 @@ Typing Speed Test
 Calculates typing speed.
 {% endblock %}
 {% block content %}
+</div>
+</div>
+<div class="container d-grid gap-2 d-md-flex justify-content-md-center">
+    <div class='col-12'>
+        <p id = 'sentence'></p>
+    </div>
+</div>
+<div class="container d-grid gap-2 d-md-flex justify-content-md-center">
+{{render_form(form, render_kw={"onsubmit":"return false;"})}}
+</div>
+<div class="container d-grid gap-2 d-md-flex justify-content-md-center">
+    <div class='col-12'>
+<p id = 'results'></p>
+    </div>
+</div>
+<div>
+    <div>
+{% block script %}
+<script>
+var stop = Date.now()
+var start = Date.now()
+document.getElementById('stop').addEventListener('click', function (e) {
+    var stop = Date.now()
+    let formData = {'button' : 'stop',
+                    'text' : document.getElementById('text').value,
+                    'sentence_text' : document.getElementById("sentence").textContent,
+                    'seconds' : (stop - start) / 1000}
+    fetch("{{ url_for('speed_test') }}", {
+        "method": "POST",
+        "body": JSON.stringify(formData),
+        "headers" : {"Content-Type": "application/json"},
+
+    })
+        .then(response => response.json())
+        .then(response => {
+            document.getElementById("results").textContent = (response["results"]);
+        });
+});
+document.getElementById('text').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        var stop = Date.now()
+        let formData = {'button' : 'stop',
+                        'text' : document.getElementById('text').value,
+                        'sentence_text' : document.getElementById("sentence").textContent,
+                        'seconds' : (stop - start) / 1000}
+        fetch("{{ url_for('speed_test') }}", {
+            "method": "POST",
+            "body": JSON.stringify(formData),
+            "headers" : {"Content-Type": "application/json"},
+
+        })
+            .then(response => response.json())
+            .then(response => {
+              document.getElementById("results").textContent = (response["results"]);
+            });
+    }
+});
+document.getElementById('start').addEventListener('click', function (e) {
+    document.getElementById('text').value = ''
+    document.getElementById("results").textContent = ''
+    let formData = {'button' : 'start'}
+        fetch("{{ url_for('speed_test') }}", {
+            "method": "POST",
+            "body": JSON.stringify(formData),
+            "headers" : {"Content-Type": "application/json"},
+
+        })
+            .then(response => response.json())
+            .then(response => {
+              document.getElementById("sentence").textContent = (response["sentence"])
+              var start = Date.now()
+              document.getElementById("text").focus();
+            });
+});
+
+</script>
+{% endblock %}
 {% endblock %}
